@@ -31,6 +31,8 @@ struct SimpleGeometry
 
 SimpleGeometry makeTriangle();
 SimpleGeometry makeCube();
+//SimpleGeometry makeFlag(std::Vector<PMat> Pmats);
+SimpleGeometry makeFlag();
 // Pass a number of subdivision to apply on the longitude of the sphere
 SimpleGeometry makeSphere(uint32_t subdivLongitude);
 

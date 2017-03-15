@@ -1,4 +1,6 @@
 #include "Application.hpp"
+#include "PMat.hpp"
+#include "Link.hpp"
 
 #include <iostream>
 #include <unordered_set>
@@ -91,7 +93,7 @@ int Application::run()
                     bindMaterial(material);
                     currentMaterial = &material;
                 }
-                glDrawElements(GL_TRIANGLES, shape.indexCount, GL_UNSIGNED_INT, (const GLvoid*)(shape.indexOffset * sizeof(GLuint)));
+                glDrawElements(GL_TRIANGLES, m_flagGeometry.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
             }
 
             for (GLuint i : {0, 1, 2, 3})
@@ -421,38 +423,51 @@ void Application::initScene()
     glGenBuffers(1, &m_SceneIBO);
 
     {
-        const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
-        glmlv::ObjData data;
-        loadObj(objPath, data);
-        m_SceneSize = data.bboxMax - data.bboxMin;
+		const GLint positionAttrLocation = 0;
+		const GLint normalAttrLocation = 1;
+		const GLint texCoordsAttrLocation = 2;
+    
+        m_SceneSize = glm::vec3(20,20,20);
+        std::cout << "SceneSize " << m_SceneSize << std::endl;
         m_SceneSizeLength = glm::length(m_SceneSize);
-
-        std::cout << "# of shapes    : " << data.shapeCount << std::endl;
-        std::cout << "# of materials : " << data.materialCount << std::endl;
-        std::cout << "# of vertex    : " << data.vertexBuffer.size() << std::endl;
-        std::cout << "# of triangles    : " << data.indexBuffer.size() / 3 << std::endl;
+        
+        m_flagGeometry = glmlv::makeFlag();
 
         // Fill VBO
         glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-        glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), data.vertexBuffer.data(), 0);
+        glBufferStorage(GL_ARRAY_BUFFER, m_flagGeometry.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_flagGeometry.vertexBuffer.data(), 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // Fill IBO
         glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
-        glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
+        glBufferStorage(GL_ARRAY_BUFFER, m_flagGeometry.indexBuffer.size() * sizeof(uint32_t), m_flagGeometry.indexBuffer.data(), 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        // Lets use a lambda to factorize VAO initialization:
+		const auto initVAO = [positionAttrLocation, normalAttrLocation, texCoordsAttrLocation](GLuint& vao, GLuint vbo, GLuint ibo)
+		{
+			glGenVertexArrays(1, &vao);
+			glBindVertexArray(vao);
 
-        // Init shape infos
-        uint32_t indexOffset = 0;
-        for (auto shapeID = 0; shapeID < data.indexCountPerShape.size(); ++shapeID)
-        {
-            m_shapes.emplace_back();
-            auto & shape = m_shapes.back();
-            shape.indexCount = data.indexCountPerShape[shapeID];
-            shape.indexOffset = indexOffset;
-            shape.materialID = data.materialIDPerShape[shapeID];
-            indexOffset += shape.indexCount;
-        }
+			// We tell OpenGL what vertex attributes our VAO is describing:
+			glEnableVertexAttribArray(positionAttrLocation);
+			glEnableVertexAttribArray(normalAttrLocation);
+			glEnableVertexAttribArray(texCoordsAttrLocation);
+
+			glBindBuffer(GL_ARRAY_BUFFER, vbo); // We bind the VBO because the next 3 calls will read what VBO is bound in order to know where the data is stored
+
+			glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*)offsetof(glmlv::Vertex3f3f2f, position));
+			glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*)offsetof(glmlv::Vertex3f3f2f, normal));
+			glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*)offsetof(glmlv::Vertex3f3f2f, texCoords));
+
+			glBindBuffer(GL_ARRAY_BUFFER, 0); // We can unbind the VBO because OpenGL has "written" in the VAO what VBO it needs to read when the VAO will be drawn
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Binding the IBO to GL_ELEMENT_ARRAY_BUFFER while a VAO is bound "writes" it in the VAO for usage when the VAO will be drawn
+
+			glBindVertexArray(0);
+		};
+		
+		initVAO(m_SceneVAO, m_SceneVBO, m_SceneIBO);
 
         glGenTextures(1, &m_WhiteTexture);
         glBindTexture(GL_TEXTURE_2D, m_WhiteTexture);
@@ -460,44 +475,6 @@ void Application::initScene()
         glm::vec4 white(1.f, 1.f, 1.f, 1.f);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
         glBindTexture(GL_TEXTURE_2D, 0);
-        
-        glGenTextures(1, &m_BlackTexture);
-        glBindTexture(GL_TEXTURE_2D, m_BlackTexture);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
-        glm::vec4 black(0.f, 0.f, 0.f, 0.f);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &black);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        // Upload all textures to the GPU
-        std::vector<GLint> textureIds;
-        for (const auto & texture : data.textures)
-        {
-            GLuint texId = 0;
-            glGenTextures(1, &texId);
-            glBindTexture(GL_TEXTURE_2D, texId);
-            glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, texture.width(), texture.height());
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texture.width(), texture.height(), GL_RGBA, GL_UNSIGNED_BYTE, texture.data());
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            textureIds.emplace_back(texId);
-        }
-
-        for (const auto & material : data.materials)
-        {
-            PhongMaterial newMaterial;
-            newMaterial.Ka = material.Ka;
-            newMaterial.Kd = material.Kd;
-            newMaterial.Ks = material.Ks;
-            newMaterial.normal = material.normal;
-            newMaterial.shininess = material.shininess;
-            newMaterial.KaTextureId = material.KaTextureId >= 0 ? textureIds[material.KaTextureId] : m_WhiteTexture;
-            newMaterial.KdTextureId = material.KdTextureId >= 0 ? textureIds[material.KdTextureId] : m_WhiteTexture;
-            newMaterial.KsTextureId = material.KsTextureId >= 0 ? textureIds[material.KsTextureId] : m_WhiteTexture;
-            newMaterial.shininessTextureId = material.shininessTextureId >= 0 ? textureIds[material.shininessTextureId] : m_WhiteTexture;
-            newMaterial.normalTextureId = material.normalTextureId >= 0 ? textureIds[material.normalTextureId] : m_BlackTexture;
-
-            m_SceneMaterials.emplace_back(newMaterial);
-        }
 
         m_DefaultMaterial.Ka = glm::vec3(0);
         m_DefaultMaterial.Kd = glm::vec3(1);
