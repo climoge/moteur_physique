@@ -18,13 +18,22 @@ int Application::run()
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount)
     {
 		for(auto currentPMat = pMats.begin(); currentPMat != pMats.end(); ++currentPMat){
-			//std::cout << "Prun : " << *currentPMat << std::endl;
-			
 			currentPMat->UpdateLeapFrog(1.f);
-			
-			//std::cout << "Prun updated : " << *currentPMat << std::endl;
 		}
+		
+		for(auto currentLink = links.begin(); currentLink != links.end(); ++currentLink)
+		{
+			
+			currentLink->LinkRessort();
+			currentLink->LinkFrein();
+			currentLink->LinkGravite(glm::vec3(0.f, -0.0091f, 0.f));
+		}
+		
+		std::cout << "Links updated" << std::endl;
+		
 		UpdateFlag();
+		
+		std::cout << "Flag updated" << std::endl;
 			
         const auto seconds = glfwGetTime();
 
@@ -45,7 +54,7 @@ int Application::run()
 
         {
             //const auto modelMatrix = glm::rotate(glm::mat4(1), 0.2f * float(seconds), glm::vec3(0, 1, 0));
-            const auto modelMatrix = glm::mat4(1);
+            const auto modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.001f, 0.001f, 0.001f));
 
             const auto mvMatrix = viewMatrix * modelMatrix;
             const auto mvpMatrix = projMatrix * mvMatrix;
@@ -131,37 +140,37 @@ Application::Application(int argc, char** argv):
     
     assert(m_width%2 == 0 && m_height%2 == 0);
     
-    float jOffset = 1/(float) m_height;
-    float iOffset = 1/(float) m_width;
+    float jOffset = 1000/(float) m_height;
+    float iOffset = 1000/(float) m_width;
     
-    for(float j = 0; j < 1; j += jOffset*2){
-		for(float i = 0; i < 1; i += iOffset*2){
+    for(float j = 0; j < 1000; j += jOffset*2){
+		for(float i = 0; i < 1000; i += iOffset*2){
 			
-			if(index == 0) pMats.push_back(PMat(glm::vec3(i, j, 0), 0.1, true)); // Anchor point
-			else pMats.push_back(PMat(glm::vec3(i, j, 0), 0.1, false));
-			pMats.push_back(PMat(glm::vec3(i, j + jOffset, 0), 0.1, false));
-			pMats.push_back(PMat(glm::vec3(i + iOffset, j, 0), 0.1, false));
-			if(index == (2*m_width)-4) pMats.push_back(PMat(glm::vec3(i + iOffset, j + jOffset, 0), 0.1, true)); // Anchor point
-			else pMats.push_back(PMat(glm::vec3(i + iOffset, j + jOffset, 0), 0.1, false));
+			if(index == 0) pMats.push_back(PMat(glm::vec3(i, j, 0), 0.f, true)); // Anchor point
+			else pMats.push_back(PMat(glm::vec3(i, j, 0), 2.f, false));
+			pMats.push_back(PMat(glm::vec3(i, j + jOffset, 0), 2.f, false));
+			if(index == (2*m_width)-4) pMats.push_back(PMat(glm::vec3(i + iOffset, j, 0), 0.f, true)); // Anchor point
+			else pMats.push_back(PMat(glm::vec3(i + iOffset, j, 0), 2.f, false));
+			pMats.push_back(PMat(glm::vec3(i + iOffset, j + jOffset, 0), 2.f, false));
 			
-			if(index >= (2*m_width)){
+			/*if(index >= (2*m_width)){
 				std::cout << "index " << index << std::endl;
 				int offset = index - (m_width*2-1);
 				std::cout << "offset " << offset << std::endl;
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset], pMats[index]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index], pMats[offset + 2]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset+2], pMats[offset]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset], pMats[index]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index], pMats[offset + 2]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset+2], pMats[offset]);
 				
 				std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index], pMats[index+2]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset+2], pMats[index]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index], pMats[index+2]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset+2], pMats[index]);
 				
 				std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
 				
@@ -169,20 +178,20 @@ Application::Application(int argc, char** argv):
 					std::cout << "index " << index << std::endl;
 					int offset = index - (m_width*2-1) + 2;
 					std::cout << "offset " << offset << std::endl;
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset], pMats[index+2]);
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset+2], pMats[offset]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset], pMats[index+2]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset+2], pMats[offset]);
 					std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
 					
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index+2], pMats[index+4]);
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index+4], pMats[offset + 2]);
-					Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[offset+2], pMats[index+2]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index+2], pMats[index+4]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index+4], pMats[offset + 2]);
+					links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[offset+2], pMats[index+2]);
 					std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
 				}
 			}
@@ -193,39 +202,39 @@ Application::Application(int argc, char** argv):
 				std::cout << "index : " << index << " modulo : " <<	index % (4*m_width) << std::endl;
 				std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
 				std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index-2], pMats[index-1]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index-1], pMats[index]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index], pMats[index-2]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index-2], pMats[index-1]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index-1], pMats[index]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index], pMats[index-2]);
 				
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index-1], pMats[index+1]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index+1], pMats[index]);
-				Links.push_back(Link(3.f, 2.f));
-				Links.back().LinkConnect(pMats[index], pMats[index-1]);
-			}
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index-1], pMats[index+1]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index+1], pMats[index]);
+				links.push_back(Link(3.f, 2.f));
+				links.back().LinkConnect(pMats[index], pMats[index-1]);
+			}*/
 			
-			Links.push_back(Link(3.f, 2.f));
-			Links.back();
+			links.push_back(Link(3.f, 2.f));
+			links.back();
 			std::cout << "pMats 0 : " << pMats[index].getPos() << std::endl;
 			std::cout << "pMats 1 : " << pMats[index+1].getPos() << std::endl;
 			std::cout << "pMats 2 : " << pMats[index+2].getPos() << std::endl;
 			
-			Links.back().LinkConnect(pMats[index], pMats[index+1]);
-			Links.push_back(Link(3.f, 2.f));
-			Links.back().LinkConnect(pMats[index+1], pMats[index+2]);
-			Links.push_back(Link(3.f, 2.f));
-			Links.back().LinkConnect(pMats[index+2], pMats[index]);
+			links.back().LinkConnect(pMats[index], pMats[index+1]);
+			links.push_back(Link(3.f, 2.f));
+			links.back().LinkConnect(pMats[index+1], pMats[index+2]);
+			links.push_back(Link(3.f, 2.f));
+			links.back().LinkConnect(pMats[index+2], pMats[index]);
 
-			Links.push_back(Link(3.f, 2.f));
-			Links.back().LinkConnect(pMats[index+1], pMats[index+3]);
-			Links.push_back(Link(3.f, 2.f));
-			Links.back().LinkConnect(pMats[index+3], pMats[index+2]);
-			Links.push_back(Link(3.f, 2.f));
-			Links.back().LinkConnect(pMats[index+2], pMats[index+1]);
+			links.push_back(Link(3.f, 2.f));
+			links.back().LinkConnect(pMats[index+1], pMats[index+3]);
+			links.push_back(Link(3.f, 2.f));
+			links.back().LinkConnect(pMats[index+3], pMats[index+2]);
+			links.push_back(Link(3.f, 2.f));
+			links.back().LinkConnect(pMats[index+2], pMats[index+1]);
 			
 			index += 4;
 		}
@@ -265,7 +274,6 @@ void Application::UpdateFlag(){
     glGenBuffers(1, &m_flagIBO);
 	
     m_flagGeometry = glmlv::makeFlag(pMats, m_width, m_height);
-    //m_flagGeometry = glmlv::makeFlag();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_flagVBO);
     glBufferStorage(GL_ARRAY_BUFFER, m_flagGeometry.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_flagGeometry.vertexBuffer.data(), 0);

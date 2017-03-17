@@ -36,7 +36,7 @@ private:
     const glmlv::fs::path m_ShadersRootPath;
     
     std::vector<PMat> pMats;
-    std::vector<Link> Links;
+    std::vector<Link> links;
     
     unsigned int m_width;
     unsigned int m_height;

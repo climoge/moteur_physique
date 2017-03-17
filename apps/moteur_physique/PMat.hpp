@@ -12,7 +12,7 @@ class PMat {
 		void UpdateLeapFrog(double h);
 		glm::vec3& getPos();
 		void setPos(glm::vec3 pos);
-		glm::vec3& getFrc();
+		glm::vec3 getFrc();
 		void setFrc(glm::vec3 frc);
 		glm::vec3& getVit();
 		void setVit(glm::vec3 vit);
@@ -23,7 +23,7 @@ class PMat {
 		glm::vec3 _pos;
 		glm::vec3 vit;
 		float m;
-		glm::vec3 frc;
+		glm::vec3 _frc;
 		bool isFix;
 };
 

@@ -190,9 +190,11 @@ SimpleGeometry makeFlag()
     return{ vertexBuffer, indexBuffer };
 }
 
-SimpleGeometry makeFlag(std::vector<PMat> &pMats, const unsigned int width, const unsigned int height)
+SimpleGeometry makeFlag(const std::vector<PMat> pMats, const unsigned int width, const unsigned int height)
 {
-	//std::cout << "P0 : " << pMats[0].getPos() << std::endl;
+	/*std::cout << "P15 : " << pMats[15].getPos() << std::endl;
+	std::cout << "P16 : " << pMats[16].getPos() << std::endl;
+	std::cout << "P17 : " << pMats[17].getPos() << std::endl;*/
 	assert(width%2 == 0 && height%2 == 0);
     std::vector<Vertex3f3f2f> vertexBuffer;
     std::vector<uint32_t> indexBuffer;
@@ -203,6 +205,13 @@ SimpleGeometry makeFlag(std::vector<PMat> &pMats, const unsigned int width, cons
     float iOffset = 1/(float) width;
     
     for(auto currentPMat : pMats){
+		//std::cout << "current : " << currentPMat.getPos() << std::endl;
+	}
+    
+    std::cout << std::endl;
+    
+    for(auto currentPMat : pMats){
+		//std::cout << "current : " << currentPMat.getPos() << std::endl;
 		vertexBuffer.push_back(Vertex3f3f2f(currentPMat.getPos(), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
 	}
     
