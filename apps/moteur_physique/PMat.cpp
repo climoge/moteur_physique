@@ -28,7 +28,7 @@ void PMat::UpdateLeapFrog(double h)
 	_frc = glm::vec3(0, 0, 0);
 }
 
-glm::vec3& PMat::getPos(){
+glm::vec3 PMat::getPos(){
 	return _pos;
 }
 

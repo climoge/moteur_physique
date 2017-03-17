@@ -10,7 +10,7 @@ class PMat {
 	public:
 		PMat(glm::vec3 pos, float _m, bool isFix);
 		void UpdateLeapFrog(double h);
-		glm::vec3& getPos();
+		glm::vec3 getPos();
 		void setPos(glm::vec3 pos);
 		glm::vec3 getFrc();
 		void setFrc(glm::vec3 frc);
