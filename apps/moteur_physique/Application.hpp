@@ -8,12 +8,15 @@
 
 #include <glm/glm.hpp>
 
+#include "Link.hpp"
+
 class Application
 {
 public:
     Application(int argc, char** argv);
 
     int run();
+    void UpdateFlag();
 private:
     static glm::vec3 computeDirectionVector(float phiRadians, float thetaRadians)
     {
@@ -31,6 +34,12 @@ private:
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
+    
+    std::vector<PMat> pMats;
+    std::vector<Link> Links;
+    
+    unsigned int m_width;
+    unsigned int m_height;
 
     glmlv::SimpleGeometry m_flagGeometry;
 

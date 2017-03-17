@@ -1,5 +1,4 @@
 #include "Application.hpp"
-#include "Link.hpp"
 #include "PMat.hpp"
 
 #include <iostream>
@@ -12,12 +11,21 @@
 #include <glm/gtx/io.hpp>
 
 int Application::run()
-{
+{	
     float clearColor[3] = { 0, 0, 0 };
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount)
     {
+		for(auto currentPMat = pMats.begin(); currentPMat != pMats.end(); ++currentPMat){
+			//std::cout << "Prun : " << *currentPMat << std::endl;
+			
+			currentPMat->UpdateLeapFrog(1.f);
+			
+			//std::cout << "Prun updated : " << *currentPMat << std::endl;
+		}
+		UpdateFlag();
+			
         const auto seconds = glfwGetTime();
 
         // Put here rendering code
@@ -115,7 +123,138 @@ Application::Application(int argc, char** argv):
 
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
+    
+    unsigned int index = 0;
+    
+    m_width = 10;
+    m_height = 10;
+    
+    assert(m_width%2 == 0 && m_height%2 == 0);
+    
+    float jOffset = 1/(float) m_height;
+    float iOffset = 1/(float) m_width;
+    
+    for(float j = 0; j < 1; j += jOffset*2){
+		for(float i = 0; i < 1; i += iOffset*2){
+			
+			if(index == 0) pMats.push_back(PMat(glm::vec3(i, j, 0), 0.1, true)); // Anchor point
+			else pMats.push_back(PMat(glm::vec3(i, j, 0), 0.1, false));
+			pMats.push_back(PMat(glm::vec3(i, j + jOffset, 0), 0.1, false));
+			pMats.push_back(PMat(glm::vec3(i + iOffset, j, 0), 0.1, false));
+			if(index == (2*m_width)-4) pMats.push_back(PMat(glm::vec3(i + iOffset, j + jOffset, 0), 0.1, true)); // Anchor point
+			else pMats.push_back(PMat(glm::vec3(i + iOffset, j + jOffset, 0), 0.1, false));
+			
+			if(index >= (2*m_width)){
+				std::cout << "index " << index << std::endl;
+				int offset = index - (m_width*2-1);
+				std::cout << "offset " << offset << std::endl;
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset], pMats[index]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index], pMats[offset + 2]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset+2], pMats[offset]);
+				
+				std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index], pMats[index+2]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset+2], pMats[index]);
+				
+				std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
+				
+				if(index % (2*m_width) < (m_width*2-4)){
+					std::cout << "index " << index << std::endl;
+					int offset = index - (m_width*2-1) + 2;
+					std::cout << "offset " << offset << std::endl;
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset], pMats[index+2]);
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index+2], pMats[offset + 2]);
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset+2], pMats[offset]);
+					std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
+					
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index+2], pMats[index+4]);
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index+4], pMats[offset + 2]);
+					Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[offset+2], pMats[index+2]);
+					std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
+				}
+			}
+			
+			
+			
+			if(index > 0 && index % (2*m_width)){
+				std::cout << "index : " << index << " modulo : " <<	index % (4*m_width) << std::endl;
+				std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
+				std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index-2], pMats[index-1]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index-1], pMats[index]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index], pMats[index-2]);
+				
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index-1], pMats[index+1]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index+1], pMats[index]);
+				Links.push_back(Link(3.f, 2.f));
+				Links.back().LinkConnect(pMats[index], pMats[index-1]);
+			}
+			
+			Links.push_back(Link(3.f, 2.f));
+			Links.back();
+			std::cout << "pMats 0 : " << pMats[index].getPos() << std::endl;
+			std::cout << "pMats 1 : " << pMats[index+1].getPos() << std::endl;
+			std::cout << "pMats 2 : " << pMats[index+2].getPos() << std::endl;
+			
+			Links.back().LinkConnect(pMats[index], pMats[index+1]);
+			Links.push_back(Link(3.f, 2.f));
+			Links.back().LinkConnect(pMats[index+1], pMats[index+2]);
+			Links.push_back(Link(3.f, 2.f));
+			Links.back().LinkConnect(pMats[index+2], pMats[index]);
 
+			Links.push_back(Link(3.f, 2.f));
+			Links.back().LinkConnect(pMats[index+1], pMats[index+3]);
+			Links.push_back(Link(3.f, 2.f));
+			Links.back().LinkConnect(pMats[index+3], pMats[index+2]);
+			Links.push_back(Link(3.f, 2.f));
+			Links.back().LinkConnect(pMats[index+2], pMats[index+1]);
+			
+			index += 4;
+		}
+	}
+
+	UpdateFlag();
+
+    glEnable(GL_DEPTH_TEST);
+
+    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
+    m_program.use();
+
+    m_uModelViewProjMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
+    m_uModelViewMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
+    m_uNormalMatrixLocation = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+
+
+    m_uDirectionalLightDirLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
+    m_uDirectionalLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
+
+    m_uPointLightPositionLocation = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
+    m_uPointLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
+
+    m_uKdLocation = glGetUniformLocation(m_program.glId(), "uKd");
+
+    m_viewController.setViewMatrix(glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
+}
+
+void Application::UpdateFlag(){
     const GLint vboBindingIndex = 0; // Arbitrary choice between 0 and glGetIntegerv(GL_MAX_VERTEX_ATTRIB_BINDINGS)
 
     const GLint positionAttrLocation = 0;
@@ -124,31 +263,9 @@ Application::Application(int argc, char** argv):
 
     glGenBuffers(1, &m_flagVBO);
     glGenBuffers(1, &m_flagIBO);
-    
-    std::vector<PMat> pMats;
-    std::vector<Link> Links;
-    unsigned int index = 0;
-    
-    for(float j = 0; j <= 1; j += 0.1){
-		for(float i = 0; i <= 1; i += 0.1){
-			/*pMats.push_back(PMat(glm::vec3(i, j, 0), 0.1, false));
-			pMats.push_back(PMat(glm::vec3(i + 0.1, j, 0), 0.1, false));
-			pMats.push_back(PMat(glm::vec3(i + 0.1, j + 0.1, 0), 0.1, false));
-			pMats.push_back(PMat(glm::vec3(i, j + 0.1, 0), 0.1, false));
-			
-			if(index > 0 && !index%2){
-				Links.push_back(Link(3.f, 2.f).LinkConnect(pMats[index-3], pMats[index]));
-			}
-			
-			Links.push_back(Link(3.f, 2.f).LinkConnect(pMats[index], pMats[index+1]));
-			Links.push_back(Link(3.f, 2.f).LinkConnect(pMats[index], pMats[index+3]));*/
-			
-			index += 4;
-		}
-	}
-
-    //m_flagGeometry = glmlv::makeFlag(pMats);
-    m_flagGeometry = glmlv::makeFlag();
+	
+    m_flagGeometry = glmlv::makeFlag(pMats, m_width, m_height);
+    //m_flagGeometry = glmlv::makeFlag();
 
     glBindBuffer(GL_ARRAY_BUFFER, m_flagVBO);
     glBufferStorage(GL_ARRAY_BUFFER, m_flagGeometry.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_flagGeometry.vertexBuffer.data(), 0);
@@ -183,24 +300,4 @@ Application::Application(int argc, char** argv):
     };
 
     initVAO(m_flagVAO, m_flagVBO, m_flagIBO);
-
-    glEnable(GL_DEPTH_TEST);
-
-    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
-    m_program.use();
-
-    m_uModelViewProjMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
-    m_uModelViewMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
-    m_uNormalMatrixLocation = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
-
-
-    m_uDirectionalLightDirLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
-    m_uDirectionalLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
-
-    m_uPointLightPositionLocation = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
-    m_uPointLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
-
-    m_uKdLocation = glGetUniformLocation(m_program.glId(), "uKd");
-
-    m_viewController.setViewMatrix(glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
 }

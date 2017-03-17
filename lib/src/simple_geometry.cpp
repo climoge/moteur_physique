@@ -1,6 +1,7 @@
 #include <glmlv/simple_geometry.hpp>
 #include <glm/gtc/constants.hpp>
 #include <iostream>
+#include <glm/gtx/io.hpp>
 
 namespace glmlv
 {
@@ -118,8 +119,8 @@ SimpleGeometry makeFlag()
     
     uint32_t index = 0;
     
-    unsigned int width = 50;
-    unsigned int height = 50;
+    unsigned int width = 10;
+    unsigned int height = 10;
     
     float jOffset = 1/(float) height;
     float iOffset = 1/(float) width;
@@ -134,39 +135,114 @@ SimpleGeometry makeFlag()
 			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i + iOffset, j + jOffset, 0), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
 			
 			if(index >= (2*width)){
-				std::cout << "index " << index << std::endl;
+				//std::cout << "index " << index << std::endl;
 				int offset = index - (width*2-1);
-				std::cout << "offset " << offset << std::endl;
+				//std::cout << "offset " << offset << std::endl;
 				indexBuffer.push_back(offset);
 				indexBuffer.push_back(index);
 				indexBuffer.push_back(offset + 2);
-				std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
+				//std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
 				indexBuffer.push_back(index);
 				indexBuffer.push_back(index+2);
 				indexBuffer.push_back(offset + 2);
-				std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
+				//std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
 				
 				if(index % (2*width) < (width*2-4)){
-					std::cout << "index " << index << std::endl;
+					//std::cout << "index " << index << std::endl;
 					int offset = index - (width*2-1) + 2;
-					std::cout << "offset " << offset << std::endl;
+					//std::cout << "offset " << offset << std::endl;
 					indexBuffer.push_back(offset);
 					indexBuffer.push_back(index+2);
 					indexBuffer.push_back(offset + 2);
-					std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
+					//std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
 					indexBuffer.push_back(index+2);
 					indexBuffer.push_back(index+4);
 					indexBuffer.push_back(offset + 2);
-					std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
+					//std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
 				}
 			}
 			
 			
 			
 			if(index > 0 && index % (2*width)){
-				std::cout << "index : " << index << " modulo : " <<	index % (4*width) << std::endl;
-				std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
-				std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
+				//std::cout << "index : " << index << " modulo : " <<	index % (4*width) << std::endl;
+				//std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
+				//std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
+				indexBuffer.push_back(index-2);
+				indexBuffer.push_back(index-1);
+				indexBuffer.push_back(index);
+				indexBuffer.push_back(index-1);
+				indexBuffer.push_back(index+1);
+				indexBuffer.push_back(index);
+			}
+			
+			indexBuffer.push_back(index);
+			indexBuffer.push_back(index+1);
+			indexBuffer.push_back(index+2);
+			indexBuffer.push_back(index+1);
+			indexBuffer.push_back(index+3);
+			indexBuffer.push_back(index+2);
+			
+			index += 4;
+		}
+	}
+
+    return{ vertexBuffer, indexBuffer };
+}
+
+SimpleGeometry makeFlag(std::vector<PMat> &pMats, const unsigned int width, const unsigned int height)
+{
+	//std::cout << "P0 : " << pMats[0].getPos() << std::endl;
+	assert(width%2 == 0 && height%2 == 0);
+    std::vector<Vertex3f3f2f> vertexBuffer;
+    std::vector<uint32_t> indexBuffer;
+    
+    uint32_t index = 0;
+    
+    float jOffset = 1/(float) height;
+    float iOffset = 1/(float) width;
+    
+    for(auto currentPMat : pMats){
+		vertexBuffer.push_back(Vertex3f3f2f(currentPMat.getPos(), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
+	}
+    
+    for(float j = 0; j < 1; j += jOffset*2){
+		for(float i = 0; i < 1; i += iOffset*2){
+			
+			if(index >= (2*width)){
+				//std::cout << "index " << index << std::endl;
+				int offset = index - (width*2-1);
+				//std::cout << "offset " << offset << std::endl;
+				indexBuffer.push_back(offset);
+				indexBuffer.push_back(index);
+				indexBuffer.push_back(offset + 2);
+				//std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
+				indexBuffer.push_back(index);
+				indexBuffer.push_back(index+2);
+				indexBuffer.push_back(offset + 2);
+				//std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
+				
+				if(index % (2*width) < (width*2-4)){
+					//std::cout << "index " << index << std::endl;
+					int offset = index - (width*2-1) + 2;
+					//std::cout << "offset " << offset << std::endl;
+					indexBuffer.push_back(offset);
+					indexBuffer.push_back(index+2);
+					indexBuffer.push_back(offset + 2);
+					//std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
+					indexBuffer.push_back(index+2);
+					indexBuffer.push_back(index+4);
+					indexBuffer.push_back(offset + 2);
+					//std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
+				}
+			}
+			
+			
+			
+			if(index > 0 && index % (2*width)){
+				//std::cout << "index : " << index << " modulo : " <<	index % (4*width) << std::endl;
+				//std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
+				//std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
 				indexBuffer.push_back(index-2);
 				indexBuffer.push_back(index-1);
 				indexBuffer.push_back(index);
