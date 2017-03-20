@@ -20,4 +20,5 @@ void main()
     vec3 dirToPointLight = (uPointLightPosition - vViewSpacePosition) / (distToPointLight*distToPointLight);
 	vec3 ambient = vec3(0.2f, 0.2f, 0.2f);
     fColor = ambient + uKd * (uDirectionalLightIntensity * max(0.f, dot(vViewSpaceNormal, uDirectionalLightDir)) + uPointLightIntensity * max(0., dot(vViewSpaceNormal, dirToPointLight)) / (distToPointLight * distToPointLight));
+	//fColor = vViewSpaceNormal;
 }

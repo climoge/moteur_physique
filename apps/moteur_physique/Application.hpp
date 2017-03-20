@@ -46,6 +46,12 @@ private:
     GLuint m_flagVBO = 0;
     GLuint m_flagIBO = 0;
     GLuint m_flagVAO = 0;
+    
+    glmlv::SimpleGeometry m_sphereGeometry;
+
+    GLuint m_sphereVBO = 0;
+    GLuint m_sphereIBO = 0;
+    GLuint m_sphereVAO = 0;
 
     glmlv::GLProgram m_program;
 
@@ -68,9 +74,10 @@ private:
     glm::vec3 m_DirLightColor = glm::vec3(1, 1, 1);
     float m_DirLightIntensity = 1.f;
 
-    glm::vec3 m_PointLightPosition = glm::vec3(0, 1, 1);
+    glm::vec3 m_PointLightPosition = glm::vec3(3, 3, 3);
     glm::vec3 m_PointLightColor = glm::vec3(1, 1, 1);
     float m_PointLightIntensity = 5.f;
 
     glm::vec3 m_FlagKd = glm::vec3(1, 0, 0);
+    glm::vec3 m_sphereKd = glm::vec3(1, 0, 0);
 };

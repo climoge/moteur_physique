@@ -130,9 +130,9 @@ SimpleGeometry makeFlag()
     for(float j = 0; j < 1; j += jOffset*2){
 		for(float i = 0; i < 1; i += iOffset*2){
 			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i, j, 0), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
-			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i, j + jOffset, 0), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
-			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i + iOffset, j, 0), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
-			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i + iOffset, j + jOffset, 0), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
+			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i, j + jOffset, 0), glm::vec3(0, 0, 1), glm::vec2(0, 1)));
+			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i + iOffset, j, 0), glm::vec3(0, 0, 1), glm::vec2(1, 0)));
+			vertexBuffer.push_back(Vertex3f3f2f(glm::vec3(i + iOffset, j + jOffset, 0), glm::vec3(0, 0, 1), glm::vec2(1, 1)));
 			
 			if(index >= (2*width)){
 				//std::cout << "index " << index << std::endl;
@@ -190,11 +190,8 @@ SimpleGeometry makeFlag()
     return{ vertexBuffer, indexBuffer };
 }
 
-SimpleGeometry makeFlag(const std::vector<PMat> pMats, const unsigned int width, const unsigned int height)
+SimpleGeometry makeFlag(std::vector<PMat> pMats, const unsigned int width, const unsigned int height)
 {
-	/*std::cout << "P15 : " << pMats[15].getPos() << std::endl;
-	std::cout << "P16 : " << pMats[16].getPos() << std::endl;
-	std::cout << "P17 : " << pMats[17].getPos() << std::endl;*/
 	assert(width%2 == 0 && height%2 == 0);
     std::vector<Vertex3f3f2f> vertexBuffer;
     std::vector<uint32_t> indexBuffer;
@@ -204,54 +201,82 @@ SimpleGeometry makeFlag(const std::vector<PMat> pMats, const unsigned int width,
     float jOffset = 1/(float) height;
     float iOffset = 1/(float) width;
     
-    for(auto currentPMat : pMats){
-		//std::cout << "current : " << currentPMat.getPos() << std::endl;
-	}
+    // Normal calculation
+    const auto normal = [](glm::vec3 A, glm::vec3 B, glm::vec3 C){
+		glm::vec3 N = glm::cross((A - B), (B - C));
+		if(N.length() > 0)
+		{
+			N = glm::normalize(N);  //normalize
+		}
+		return N;
+	};
+	
+    /*vector3 N = (A - B) % (B - C); //perform cross product of two lines on plane
+
+    if(N.getMagnitude() > 0)
+    {
+        N.normalize();  //normalize
+        m_n = N;         //assign new normal to member normal
+        m_d = n * A;   //offset plane from origin
+    }*/
+    // End
     
-    std::cout << std::endl;
+    /*for(auto currentPMat = pMats.begin(); currentPMat != pMats.end(); ++currentPMat){
+		int index = std::distance( pMats.begin(), currentPMat );
+
+		if(index >= (2*width)){
+			int offset = (width*2-1);
+			
+			if(index % (2*width) < (width*2-4))
+				vertexBuffer.push_back(Vertex3f3f2f(currentPMat->getPos(), normal((currentPMat-offset)->getPos(), (currentPMat+2)->getPos(), (currentPMat-offset+2)->getPos()) , glm::vec2(0, 0)));
+			else 
+				vertexBuffer.push_back(Vertex3f3f2f(currentPMat->getPos(), normal((currentPMat-offset)->getPos(), (currentPMat)->getPos(), (currentPMat-offset+2)->getPos()) , glm::vec2(0, 0)));
+		}
+		else if(index > 0 && index % (2*width)){
+			vertexBuffer.push_back(Vertex3f3f2f(currentPMat->getPos(), normal((currentPMat-2)->getPos(), (currentPMat-1)->getPos(), (currentPMat)->getPos()) , glm::vec2(0, 0)));
+		}
+		else
+			vertexBuffer.push_back(Vertex3f3f2f(currentPMat->getPos(), normal(currentPMat->getPos(), (currentPMat+1)->getPos(), (currentPMat+2)->getPos()) , glm::vec2(0, 0)));
+	}*/
     
     for(auto currentPMat : pMats){
-		//std::cout << "current : " << currentPMat.getPos() << std::endl;
 		vertexBuffer.push_back(Vertex3f3f2f(currentPMat.getPos(), glm::vec3(0, 0, 1), glm::vec2(0, 0)));
 	}
-    
+	
+    /*for(auto currentPMat : pMats){
+		vertexBuffer.push_back(Vertex3f3f2f(currentPMat.getPos(), currentPMat.getPos(), glm::vec2(0, 0)));
+	}*/
+	
     for(float j = 0; j < 1; j += jOffset*2){
 		for(float i = 0; i < 1; i += iOffset*2){
 			
 			if(index >= (2*width)){
-				//std::cout << "index " << index << std::endl;
 				int offset = index - (width*2-1);
-				//std::cout << "offset " << offset << std::endl;
 				indexBuffer.push_back(offset);
 				indexBuffer.push_back(index);
 				indexBuffer.push_back(offset + 2);
-				//std::cout << "Vertex 1 : " << offset << " " << index << " " << offset+2 << std::endl;
+
 				indexBuffer.push_back(index);
 				indexBuffer.push_back(index+2);
 				indexBuffer.push_back(offset + 2);
-				//std::cout << "Vertex 1 : " << index << " " << index+2 << " " << offset+2 << std::endl;
 				
 				if(index % (2*width) < (width*2-4)){
-					//std::cout << "index " << index << std::endl;
 					int offset = index - (width*2-1) + 2;
-					//std::cout << "offset " << offset << std::endl;
+
 					indexBuffer.push_back(offset);
 					indexBuffer.push_back(index+2);
 					indexBuffer.push_back(offset + 2);
-					//std::cout << "Vertex 1 : " << offset << " " << index+2 << " " << offset+2 << std::endl;
+
 					indexBuffer.push_back(index+2);
 					indexBuffer.push_back(index+4);
 					indexBuffer.push_back(offset + 2);
-					//std::cout << "Vertex 1 : " << index+2 << " " << index+4 << " " << offset+2 << std::endl << std::endl;
+
 				}
 			}
 			
 			
 			
 			if(index > 0 && index % (2*width)){
-				//std::cout << "index : " << index << " modulo : " <<	index % (4*width) << std::endl;
-				//std::cout << "Vertex 1 : " << index-2 << " " << index-1 << " " << index << std::endl;
-				//std::cout << "Vertex 2 : " << index-1 << " " << index+1 << " " << index << std::endl << std::endl;
 				indexBuffer.push_back(index-2);
 				indexBuffer.push_back(index-1);
 				indexBuffer.push_back(index);
